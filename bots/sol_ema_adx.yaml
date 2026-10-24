@@ -1,0 +1,62 @@
+# EMA cross + ADX filter — SOL 15m (port of the standalone bot)
+# Entry: EMA(3) crosses EMA(9) with ADX >= 23 on a closed candle
+# Size:  risk_per_trade / (ATR * atr_sl_multiplier)  |  SL/TP/SAR on ATR
+# The `grid:` section is only used as a fallback for symbol/exchange plumbing;
+# execution and exits are fully owned by the ema_adx strategy.
+
+name: "sol_ema_adx"
+active: true
+
+exchange:
+  type: "hyperliquid"
+  testnet: true
+  # account_address: "0x..."  # set when the private key is an agent wallet
+
+strategy:
+  type: "ema_adx"
+  symbol: "SOL"
+  interval: "15m"
+
+  ema_fast: 3
+  ema_slow: 9
+  atr_period: 14
+  adx_period: 14
+  adx_threshold: 23.0
+
+  atr_sl_multiplier: 2.0
+  risk_reward_ratio: 3.0
+  sar_atr_multiplier: 1.2
+
+  risk_per_trade: 0.01      # 1% of available balance at risk per trade
+  max_position_pct: 0.9     # never use more than 90% of balance as notional
+  min_notional: 10.0        # Hyperliquid minimum order value (USD)
+
+  warmup_candles: 200
+
+account:
+  max_allocation_pct: 10.0
+
+# Fallback / plumbing only for ema_adx bots.
+grid:
+  symbol: "SOL"
+  levels: 5
+  price_range:
+    mode: "auto"
+    auto:
+      range_pct: 5.0
+
+risk_management:
+  # The strategy owns SL/TP/SAR; keep engine-side triggers off to avoid
+  # two systems closing the same position.
+  stop_loss_enabled: false
+  stop_loss_pct: 8.0
+  take_profit_enabled: false
+  take_profit_pct: 25.0
+  tpsl_mode: "polling"
+  max_drawdown_pct: 30.0
+  max_position_size_pct: 100.0
+  rebalance:
+    price_move_threshold_pct: 12.0
+
+monitoring:
+  log_level: "INFO"

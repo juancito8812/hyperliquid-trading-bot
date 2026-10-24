@@ -580,11 +580,58 @@ class TradingEngine:
             self.logger.error(f"❌ Failed to arm grouped TP/SL on {coin}: {e}")
 
     async def _close_positions(self, signal: TradingSignal) -> None:
-        """Close positions (e.g., cancel all orders for rebalancing)"""
+        """Close a position with a reduce-only market order.
 
+        `metadata.action == "cancel_all"` keeps the legacy rebalance behaviour
+        (cancel resting orders only).
+        """
         if signal.metadata.get("action") == "cancel_all":
             cancelled = await self.exchange.cancel_all_orders()
             self.logger.info(f"🗑️ Cancelled {cancelled} orders for rebalancing")
+            return
+
+        positions = await self.exchange.get_positions()
+        target = next(
+            (
+                p
+                for p in positions
+                if getattr(p, "asset", None) == signal.asset
+                and float(getattr(p, "size", 0) or 0) != 0
+            ),
+            None,
+        )
+        if target is None:
+            self.logger.info(
+                f"ℹ️ Close signal for {signal.asset} ignored: no open position"
+            )
+            return
+
+        position_size = abs(float(target.size))
+        size = position_size
+        if signal.size and 0 < float(signal.size) < position_size:
+            size = float(signal.size)
+
+        now = time.time()
+        order = Order(
+            id=f"order_{int(now * 1000)}",
+            asset=signal.asset,
+            side=OrderSide.SELL if target.size > 0 else OrderSide.BUY,
+            size=size,
+            order_type=OrderType.MARKET,
+            price=None,
+            created_at=now,
+            dex=signal.dex or getattr(target, "dex", None),
+            reduce_only=True,
+        )
+        exchange_order_id = await self.exchange.place_order(order)
+        order.exchange_order_id = exchange_order_id
+        order.status = OrderStatus.SUBMITTED
+        self.pending_orders[order.id] = order
+        self._signals_by_oid[exchange_order_id] = (signal, now)
+        self.logger.info(
+            f"🔻 Close {order.side.value} market {size} {signal.asset} "
+            f"({signal.reason or 'strategy exit'})"
+        )
 
     async def _trading_loop(self) -> None:
         """Main trading loop for periodic tasks"""

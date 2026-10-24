@@ -8,12 +8,14 @@ Available strategies:
 - BasicGridStrategy: Grid trading with geometric spacing and rebalancing
 """
 
+from .ema_adx import EmaAdxStrategy
 from .grid import BasicGridStrategy
 
 # Strategy registry - makes it easy to add new strategies
 STRATEGY_REGISTRY = {
     "basic_grid": BasicGridStrategy,
     "grid": BasicGridStrategy,  # Alias
+    "ema_adx": EmaAdxStrategy,
 }
 
 
