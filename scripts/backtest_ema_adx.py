@@ -232,6 +232,10 @@ class Broker:
     equity_curve: List[tuple] = field(default_factory=list)
     open_trade: Optional[Trade] = None
     fees_paid: float = 0.0
+    ticks: int = 0
+    bars_in_market: int = 0
+    lev_sum: float = 0.0
+    lev_n: int = 0
 
     def positions(self) -> List[Position]:
         return [self.position] if self.position else []
@@ -251,18 +255,29 @@ class Broker:
             pnl = (slip - self.open_trade.entry_price) * closed * direction
             self.balance += pnl - fee
             trade = self.open_trade
+            remaining = abs(self.position.size) - closed
+            entry_fees = trade.fees
+            total = closed + max(remaining, 0.0)
+            # split the entry fee pro-rata so each leg's PnL is comparable
+            trade.fees = (entry_fees * closed / total if total > 0 else entry_fees) + fee
             trade.exit_ts, trade.exit_price = ts, slip
             trade.pnl = pnl - fee
-            trade.fees += fee
+            trade.size = closed
             trade.equity_after = self.balance
             self.trades.append(trade)
-            self.open_trade = None
-            remaining = abs(self.position.size) - closed
-            self.position = None if remaining <= 1e-9 else Position(
-                asset=self.coin, size=remaining * direction,
-                entry_price=self.position.entry_price,
-                current_value=remaining * slip, unrealized_pnl=0.0,
-                timestamp=ts / 1000.0)
+            if remaining <= 1e-9:
+                self.position = None
+                self.open_trade = None
+            else:
+                self.position = Position(
+                    asset=self.coin, size=remaining * direction,
+                    entry_price=trade.entry_price,
+                    current_value=remaining * slip, unrealized_pnl=0.0,
+                    timestamp=ts / 1000.0)
+                self.open_trade = Trade(
+                    coin=self.coin, side=trade.side, size=remaining,
+                    entry_ts=trade.entry_ts, entry_price=trade.entry_price,
+                    fees=entry_fees * remaining / total if total > 0 else 0.0)
             return
 
         signed = size if side == "buy" else -size
@@ -273,8 +288,24 @@ class Broker:
                                      timestamp=ts / 1000.0)
             self.open_trade = Trade(coin=self.coin, side="long" if signed > 0 else "short",
                                     size=abs(signed), entry_ts=ts, entry_price=slip, fees=fee)
-        else:
+        elif (self.position.size > 0) == (signed > 0):
+            prev = abs(self.position.size)
+            total = prev + abs(signed)
+            avg = (prev * self.position.entry_price + abs(signed) * slip) / total
             self.position.size += signed
+            self.position.entry_price = avg
+            self.position.current_value = abs(self.position.size) * slip
+            if self.open_trade:
+                self.open_trade.entry_price = avg
+                self.open_trade.size = abs(self.position.size)
+                self.open_trade.fees += fee
+        else:
+            # opposite side without reduce_only: realise the old leg, then open the new one
+            self.fees_paid -= fee
+            self.balance += fee
+            flip = "sell" if self.position.size > 0 else "buy"
+            self.apply(flip, abs(self.position.size), price, ts, reduce_only=True)
+            self.apply(side, size, price, ts, reduce_only=False)
 
     def mark(self, price: float, ts: int) -> None:
         equity = self.balance
@@ -282,6 +313,12 @@ class Broker:
             direction = 1 if self.position.size > 0 else -1
             equity += (price - self.position.entry_price) * abs(self.position.size) * direction
         self.equity_curve.append((ts, equity))
+        self.ticks += 1
+        if self.position:
+            self.bars_in_market += 1
+            if equity > 0:
+                self.lev_sum += abs(self.position.size) * price / equity
+                self.lev_n += 1
 
     def close_open_at(self, price: float, ts: int, reason: str) -> None:
         if not self.position or not self.open_trade:
@@ -315,6 +352,10 @@ class Broker:
             "worst_trade_usd": round(min((t.pnl for t in closed), default=0.0), 2),
             "max_drawdown_pct": round(max_dd, 2),
             "fees_usd": round(self.fees_paid, 2),
+            "expectancy_usd": round(statistics.mean([t.pnl for t in closed]), 2) if closed else 0.0,
+            "exposure_pct": round(self.bars_in_market / self.ticks * 100, 2) if self.ticks else 0.0,
+            "avg_leverage": round(self.lev_sum / self.lev_n, 2) if self.lev_n else 0.0,
+            "balance_end": round(self.balance, 2),
             "exit_reasons": {r: sum(1 for t in closed if t.reason == r)
                              for r in sorted({t.reason for t in closed})},
         }
@@ -417,7 +458,9 @@ def run_backtest(coin: str, interval: str, days: int, warmup: int = 200,
         "config": {k: cfg.get(k) for k in
                    ("ema_fast", "ema_slow", "adx_period", "adx_threshold",
                     "atr_period", "atr_sl_multiplier", "risk_reward_ratio",
-                    "risk_per_trade", "max_leverage")},
+                    "risk_per_trade", "max_leverage", "entry_ladder",
+                    "ladder_step_atr", "partial_exits", "allow_sar_reverse",
+                    "cooldown_bars_after_loss")},
     })
     return out
 
@@ -433,6 +476,7 @@ def main() -> None:
     ap.add_argument("--fee", type=float, default=0.00045, help="taker fee rate per fill")
     ap.add_argument("--set", default="", help="strategy overrides, e.g. adx_threshold=25,sar_atr_multiplier=2")
     ap.add_argument("--tag", default="", help="label for this run; written into file names and the JSON")
+    ap.add_argument("--set-json", default="", help="JSON object of overrides, e.g. '{\"entry_ladder\":[0.5,0.25,0.25]}'")
     args = ap.parse_args()
 
     FEE = args.fee
@@ -446,6 +490,9 @@ def main() -> None:
             overrides[k.strip()] = float(val)
         else:
             overrides[k.strip()] = val
+
+    if args.set_json:
+        overrides.update(json.loads(args.set_json))
 
     coins = [c.strip().upper() for c in args.coins.split(",") if c.strip()]
     outdir_early = ROOT / args.out

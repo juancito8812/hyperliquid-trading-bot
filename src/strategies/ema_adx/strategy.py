@@ -118,6 +118,15 @@ class EmaAdxConfig:
     allow_sar_reverse: bool = True   # False = SAR/stop exits do not auto-reverse
     cooldown_bars_after_loss: int = 0  # closed candles to wait after a losing exit
 
+    # Ladder entry: weights of the first entry and each adverse-move add.
+    # ``[1.0]`` disables the ladder (single market entry, the old behaviour).
+    entry_ladder: List[float] = field(default_factory=lambda: [1.0])
+    ladder_step_atr: float = 0.5  # ATR multiple between consecutive adds
+
+    # Scale-out: ``[[r_multiple, fraction], ...]`` of the initial size.
+    # Empty disables partial exits (single exit at stop/target/SAR).
+    partial_exits: List[List[float]] = field(default_factory=list)
+
     risk_per_trade: float = 0.01
     max_position_pct: float = 0.9  # notional cap vs available balance
     min_notional: float = 10.0  # exchange minimum order value (USD)
@@ -146,6 +155,23 @@ class EmaAdxConfig:
             raise ValueError("warmup_candles must be >= 40")
         if self.cooldown_bars_after_loss < 0:
             raise ValueError("cooldown_bars_after_loss must be >= 0")
+        weights = [float(w) for w in self.entry_ladder or []]
+        if not weights or any(w <= 0 for w in weights):
+            raise ValueError("entry_ladder weights must be > 0")
+        if sum(weights) > 1.0001:
+            raise ValueError("entry_ladder weights must sum to <= 1")
+        if self.ladder_step_atr <= 0:
+            raise ValueError("ladder_step_atr must be > 0")
+        for level in self.partial_exits or []:
+            if len(level) != 2:
+                raise ValueError("partial_exits entries must be [r_multiple, fraction]")
+            if float(level[0]) <= 0 or not 0 < float(level[1]) <= 1:
+                raise ValueError("partial_exits needs r_multiple > 0 and fraction in (0, 1]")
+        rs = [float(level[0]) for level in self.partial_exits or []]
+        if rs != sorted(rs):
+            raise ValueError("partial_exits must be ordered by r_multiple")
+        if sum(float(level[1]) for level in self.partial_exits or []) > 1.0001:
+            raise ValueError("partial_exits fractions must sum to <= 1")
 
     @classmethod
     def from_dict(cls, data: Optional[Dict[str, Any]]) -> "EmaAdxConfig":
@@ -186,6 +212,7 @@ class EmaAdxStrategy(TradingStrategy):
         self._pending_reverse: Optional[Dict[str, Any]] = None
         self._cooldown_bars_left = 0
         self._last_bar_ts: Optional[int] = None
+        self._plan: Optional[Dict[str, Any]] = None
         self.stats: Dict[str, Any] = {
             "signals": 0,
             "entries": 0,
@@ -265,6 +292,7 @@ class EmaAdxStrategy(TradingStrategy):
         position = self._find_position(positions)
         if position is not None:
             return self._exit_signals(position, price, now)
+        self._plan = None
         return self._entry_signals(price, float(balance or 0.0), now, bar_closed)
 
     # ── signals ─────────────────────────────────────────────────────────
@@ -298,7 +326,9 @@ class EmaAdxStrategy(TradingStrategy):
         if side is None:
             return []
 
-        size = self._position_size(balance, ind["atr"], price)
+        weights = [float(w) for w in self.cfg.entry_ladder]
+        full_size = self._position_size(balance, ind["atr"], price)
+        size = round(full_size * weights[0], 4) if full_size > 0 else 0.0
         if size <= 0:
             logger.info(
                 "⏭️ EMA/ADX skipped %s entry: size below exchange minimum "
@@ -326,6 +356,16 @@ class EmaAdxStrategy(TradingStrategy):
             dex=self.cfg.dex,
         )
         self._inflight_until = now + self.cfg.order_cooldown_s
+        self._plan = {
+            "anchor": price,
+            "atr": float(ind["atr"]),
+            "full_size": full_size,
+            "initial_size": size,
+            "side": side,
+            "adds_done": 0,
+            "partials_done": 0,
+            "ts": now,
+        }
         self.stats["signals"] += 1
         self.stats["entries"] += 1
         self.stats["last_reason"] = reason
@@ -358,21 +398,117 @@ class EmaAdxStrategy(TradingStrategy):
         sar_distance = atr_value * self.cfg.sar_atr_multiplier
         is_long = float(position.size) > 0
 
+        plan = self._plan
+        if plan is None:
+            qty = abs(float(position.size))
+            plan = self._plan = {
+                "anchor": entry,
+                "atr": atr_value,
+                "full_size": qty,
+                "initial_size": qty,
+                "side": "buy" if is_long else "sell",
+                "adds_done": 0,
+                "partials_done": 0,
+                "ts": now,
+            }
+        anchor = float(plan["anchor"])
+        plan_atr = float(plan["atr"]) or atr_value
+        plan_sl = plan_atr * self.cfg.atr_sl_multiplier
+
         if is_long:
             if price <= entry - sl_distance:
                 return self._close(position, price, now, "stop_loss")
+        else:
+            if price >= entry + sl_distance:
+                return self._close(position, price, now, "stop_loss")
+
+        partial = self._partial_signals(position, price, now, plan, is_long, anchor, plan_sl)
+        if partial:
+            return partial
+
+        add = self._ladder_add(position, price, now, plan, is_long, anchor, plan_atr)
+        if add:
+            return add
+
+        if is_long:
             if price >= entry + tp_distance:
                 return self._close(position, price, now, "take_profit")
             if price <= entry - sar_distance and ind["adx"] >= self.cfg.adx_threshold:
                 return self._close(position, price, now, "sar", reverse_side="sell")
         else:
-            if price >= entry + sl_distance:
-                return self._close(position, price, now, "stop_loss")
             if price <= entry - tp_distance:
                 return self._close(position, price, now, "take_profit")
             if price >= entry + sar_distance and ind["adx"] >= self.cfg.adx_threshold:
                 return self._close(position, price, now, "sar", reverse_side="buy")
         return []
+
+    def _partial_signals(
+        self,
+        position: Position,
+        price: float,
+        now: float,
+        plan: Dict[str, Any],
+        is_long: bool,
+        anchor: float,
+        plan_sl: float,
+    ) -> List[TradingSignal]:
+        levels = self.cfg.partial_exits or []
+        done = int(plan["partials_done"])
+        for idx in range(done, len(levels)):
+            r_mult = float(levels[idx][0])
+            fraction = float(levels[idx][1])
+            target = anchor + r_mult * plan_sl if is_long else anchor - r_mult * plan_sl
+            if (price < target) if is_long else (price > target):
+                break
+            plan["partials_done"] = idx + 1
+            qty = round(float(plan["initial_size"]) * fraction, 4)
+            if qty * price < self.cfg.min_notional:
+                continue
+            return self._close(position, price, now, f"partial_{r_mult:g}r", size=qty)
+        return []
+
+    def _ladder_add(
+        self,
+        position: Position,
+        price: float,
+        now: float,
+        plan: Dict[str, Any],
+        is_long: bool,
+        anchor: float,
+        plan_atr: float,
+    ) -> List[TradingSignal]:
+        weights = [float(w) for w in self.cfg.entry_ladder]
+        adds_done = int(plan["adds_done"])
+        if adds_done + 1 >= len(weights):
+            return []
+        step = (adds_done + 1) * self.cfg.ladder_step_atr * plan_atr
+        level = anchor - step if is_long else anchor + step
+        if (price > level) if is_long else (price < level):
+            return []
+        qty = round(float(plan["full_size"]) * weights[adds_done + 1], 4)
+        if qty * price < self.cfg.min_notional:
+            return []
+        plan["adds_done"] = adds_done + 1
+        reason = f"ladder_add_{adds_done + 1}"
+        self._inflight_until = now + self.cfg.order_cooldown_s
+        self.stats["signals"] += 1
+        self.stats["entries"] += 1
+        self.stats["last_reason"] = reason
+        logger.info(
+            "➕ EMA/ADX LADDER ADD %s size=%.6f @ ~%.4f (level=%.4f)",
+            self.asset, qty, price, level,
+        )
+        return [
+            TradingSignal(
+                signal_type=SignalType.BUY if is_long else SignalType.SELL,
+                asset=position.asset or self.asset,
+                size=qty,
+                price=None,
+                reason=reason,
+                metadata={"strategy": "ema_adx", "ladder_step": adds_done + 1},
+                dex=getattr(position, "dex", None) or self.cfg.dex,
+            )
+        ]
 
     def _close(
         self,
@@ -381,6 +517,7 @@ class EmaAdxStrategy(TradingStrategy):
         now: float,
         reason: str,
         reverse_side: Optional[str] = None,
+        size: Optional[float] = None,
     ) -> List[TradingSignal]:
         if reason in ("stop_loss", "sar") and self.cfg.cooldown_bars_after_loss > 0:
             self._cooldown_bars_left = self.cfg.cooldown_bars_after_loss
@@ -390,10 +527,13 @@ class EmaAdxStrategy(TradingStrategy):
         self.stats["signals"] += 1
         self.stats["exits"] += 1
         self.stats["last_reason"] = reason
+        qty = abs(float(position.size)) if size is None else min(
+            float(size), abs(float(position.size))
+        )
         logger.info(
             "📉 EMA/ADX CLOSE %s size=%.6f @ ~%.4f (reason=%s)",
             self.asset,
-            abs(float(position.size)),
+            qty,
             price,
             reason,
         )
@@ -401,7 +541,7 @@ class EmaAdxStrategy(TradingStrategy):
             TradingSignal(
                 signal_type=SignalType.CLOSE,
                 asset=position.asset or self.asset,
-                size=abs(float(position.size)),
+                size=qty,
                 price=None,
                 reason=reason,
                 metadata={"strategy": "ema_adx", "reason": reason},
