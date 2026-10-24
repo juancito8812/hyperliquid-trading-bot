@@ -339,3 +339,42 @@ def test_yaml_bot_configs_load_and_validate():
         config = EnhancedBotConfig.from_yaml(bots_dir / name)
         assert config.strategy["type"] == "ema_adx"
         assert config.name
+
+# ── churn controls: SAR reverse + loss cooldown ─────────────────────────
+def test_sar_exit_arms_reverse_by_default():
+    strategy = seed_ready(make_strategy())
+    strategy._indicators = snapshot(adx=30.0)
+    pos = position(1.0, 100.0)
+    signals = strategy._exit_signals(pos, price=98.5, now=1000.0)
+    assert signals and signals[0].reason == "sar"
+    assert strategy._pending_reverse["side"] == "sell"
+
+
+def test_sar_exit_does_not_arm_reverse_when_disabled():
+    strategy = seed_ready(make_strategy(allow_sar_reverse=False))
+    strategy._indicators = snapshot(adx=30.0)
+    signals = strategy._exit_signals(position(1.0, 100.0), 98.5, 1000.0)
+    assert signals and signals[0].reason == "sar"
+    assert strategy._pending_reverse is None
+
+
+def test_cooldown_blocks_entry_after_loss():
+    strategy = seed_ready(make_strategy(cooldown_bars_after_loss=2))
+    strategy._indicators = snapshot(crossover_bull=True)
+    exits = strategy._exit_signals(position(1.0, 100.0), price=97.5, now=1000.0)
+    assert exits and exits[0].reason == "stop_loss"
+    assert strategy._cooldown_bars_left == 2
+
+    assert strategy._entry_signals(100.0, 1000.0, 2000.0, True) == []
+    strategy._cooldown_bars_left -= 1
+    assert strategy._entry_signals(100.0, 1000.0, 3000.0, True) == []
+    strategy._cooldown_bars_left -= 1
+    assert len(strategy._entry_signals(100.0, 1000.0, 4000.0, True)) == 1
+
+
+def test_cooldown_defaults_to_off():
+    strategy = seed_ready(make_strategy())
+    strategy._indicators = snapshot(crossover_bull=True)
+    strategy._exit_signals(position(1.0, 100.0), price=97.5, now=1000.0)
+    assert strategy._cooldown_bars_left == 0
+    assert len(strategy._entry_signals(100.0, 1000.0, 2000.0, True)) == 1

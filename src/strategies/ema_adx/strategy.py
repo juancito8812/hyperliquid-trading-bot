@@ -113,6 +113,11 @@ class EmaAdxConfig:
     risk_reward_ratio: float = 3.0
     sar_atr_multiplier: float = 1.2
 
+    # Churn controls (see backtest_results/REPORTE_1ANO.md: the SAR reverse
+    # re-entered on every flip and fees ate the account).
+    allow_sar_reverse: bool = True   # False = SAR/stop exits do not auto-reverse
+    cooldown_bars_after_loss: int = 0  # closed candles to wait after a losing exit
+
     risk_per_trade: float = 0.01
     max_position_pct: float = 0.9  # notional cap vs available balance
     min_notional: float = 10.0  # exchange minimum order value (USD)
@@ -139,6 +144,8 @@ class EmaAdxConfig:
             raise ValueError(f"unsupported interval {self.interval!r}")
         if self.warmup_candles < 40:
             raise ValueError("warmup_candles must be >= 40")
+        if self.cooldown_bars_after_loss < 0:
+            raise ValueError("cooldown_bars_after_loss must be >= 0")
 
     @classmethod
     def from_dict(cls, data: Optional[Dict[str, Any]]) -> "EmaAdxConfig":
@@ -177,6 +184,7 @@ class EmaAdxStrategy(TradingStrategy):
         self._indicators: Optional[Dict[str, float]] = None
         self._inflight_until = 0.0
         self._pending_reverse: Optional[Dict[str, Any]] = None
+        self._cooldown_bars_left = 0
         self._last_bar_ts: Optional[int] = None
         self.stats: Dict[str, Any] = {
             "signals": 0,
@@ -248,8 +256,12 @@ class EmaAdxStrategy(TradingStrategy):
         bar_closed = self.buffer.add_price(price, getattr(market_data, "timestamp", None))
         if bar_closed:
             self._refresh_indicators()
+            if self._cooldown_bars_left > 0:
+                self._cooldown_bars_left -= 1
 
-        now = time.time()
+        # Prefer the market timestamp so backtests replay in candle time; live
+        # ticks carry exchange time and stay within a few ms of wall clock.
+        now = float(getattr(market_data, "timestamp", None) or time.time())
         position = self._find_position(positions)
         if position is not None:
             return self._exit_signals(position, price, now)
@@ -260,6 +272,8 @@ class EmaAdxStrategy(TradingStrategy):
         self, price: float, balance: float, now: float, bar_closed: bool
     ) -> List[TradingSignal]:
         if now < self._inflight_until:
+            return []
+        if self._cooldown_bars_left > 0:
             return []
         ind = self._indicators
         if ind is None or ind["atr"] <= 0 or balance <= 0:
@@ -368,7 +382,9 @@ class EmaAdxStrategy(TradingStrategy):
         reason: str,
         reverse_side: Optional[str] = None,
     ) -> List[TradingSignal]:
-        if reverse_side:
+        if reason in ("stop_loss", "sar") and self.cfg.cooldown_bars_after_loss > 0:
+            self._cooldown_bars_left = self.cfg.cooldown_bars_after_loss
+        if reverse_side and self.cfg.allow_sar_reverse and self._cooldown_bars_left == 0:
             self._pending_reverse = {"side": reverse_side, "ts": now, "reason": reason}
         self._inflight_until = now + self.cfg.order_cooldown_s
         self.stats["signals"] += 1
@@ -442,5 +458,6 @@ class EmaAdxStrategy(TradingStrategy):
             "warmup_ok": self._seeded,
             "indicators": self._indicators,
             "pending_reverse": self._pending_reverse,
+            "cooldown_bars_left": self._cooldown_bars_left,
             "stats": dict(self.stats),
         }
