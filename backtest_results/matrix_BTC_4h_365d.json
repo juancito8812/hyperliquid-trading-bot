@@ -1,0 +1,491 @@
+[
+  {
+    "trades": 108,
+    "wins": 16,
+    "losses": 92,
+    "win_rate_pct": 14.81,
+    "net_pnl_usd": -194.82,
+    "net_pnl_pct": -19.48,
+    "profit_factor": 0.7,
+    "avg_trade_usd": -1.62,
+    "best_trade_usd": 38.13,
+    "worst_trade_usd": -12.0,
+    "max_drawdown_pct": 20.48,
+    "fees_usd": 39.63,
+    "expectancy_usd": -1.62,
+    "exposure_pct": 66.11,
+    "avg_leverage": 0.43,
+    "balance_end": 805.18,
+    "exit_reasons": {
+      "end_of_test": 1,
+      "sar": 74,
+      "stop_loss": 17,
+      "take_profit": 16
+    },
+    "coin": "BTC",
+    "interval": "4h",
+    "days": 365,
+    "source": "binance",
+    "bars": 2328,
+    "ticks": 510720,
+    "from": 1759276800000,
+    "to": 1792785600000,
+    "buy_and_hold_pct": -24.45,
+    "strategy_signals": {
+      "signals": 215,
+      "entries": 108,
+      "exits": 107,
+      "warmup_ok": true,
+      "last_reason": "sar_reverse_from_sar"
+    },
+    "tag": "base",
+    "overrides": {},
+    "config": {
+      "ema_fast": 3,
+      "ema_slow": 9,
+      "adx_period": 14,
+      "adx_threshold": 23.0,
+      "atr_period": 14,
+      "atr_sl_multiplier": 2.0,
+      "risk_reward_ratio": 3.0,
+      "risk_per_trade": 0.01,
+      "max_leverage": null,
+      "entry_ladder": null,
+      "ladder_step_atr": null,
+      "partial_exits": null,
+      "allow_sar_reverse": null,
+      "cooldown_bars_after_loss": null
+    },
+    "variant": "base",
+    "runtime_s": 5.6
+  },
+  {
+    "trades": 89,
+    "wins": 18,
+    "losses": 71,
+    "win_rate_pct": 20.22,
+    "net_pnl_usd": -147.18,
+    "net_pnl_pct": -14.72,
+    "profit_factor": 0.72,
+    "avg_trade_usd": -1.47,
+    "best_trade_usd": 28.49,
+    "worst_trade_usd": -12.23,
+    "max_drawdown_pct": 15.55,
+    "fees_usd": 32.43,
+    "expectancy_usd": -1.47,
+    "exposure_pct": 70.18,
+    "avg_leverage": 0.33,
+    "balance_end": 852.82,
+    "exit_reasons": {
+      "end_of_test": 1,
+      "sar": 56,
+      "stop_loss": 14,
+      "take_profit": 18
+    },
+    "coin": "BTC",
+    "interval": "4h",
+    "days": 365,
+    "source": "binance",
+    "bars": 2328,
+    "ticks": 510720,
+    "from": 1759276800000,
+    "to": 1792785600000,
+    "buy_and_hold_pct": -24.45,
+    "strategy_signals": {
+      "signals": 336,
+      "entries": 248,
+      "exits": 88,
+      "warmup_ok": true,
+      "last_reason": "ladder_add_2"
+    },
+    "tag": "ladder",
+    "overrides": {
+      "entry_ladder": [
+        0.5,
+        0.25,
+        0.25
+      ],
+      "ladder_step_atr": 0.5
+    },
+    "config": {
+      "ema_fast": 3,
+      "ema_slow": 9,
+      "adx_period": 14,
+      "adx_threshold": 23.0,
+      "atr_period": 14,
+      "atr_sl_multiplier": 2.0,
+      "risk_reward_ratio": 3.0,
+      "risk_per_trade": 0.01,
+      "max_leverage": null,
+      "entry_ladder": [
+        0.5,
+        0.25,
+        0.25
+      ],
+      "ladder_step_atr": 0.5,
+      "partial_exits": null,
+      "allow_sar_reverse": null,
+      "cooldown_bars_after_loss": null
+    },
+    "variant": "ladder",
+    "runtime_s": 5.7
+  },
+  {
+    "trades": 161,
+    "wins": 69,
+    "losses": 92,
+    "win_rate_pct": 42.86,
+    "net_pnl_usd": -177.08,
+    "net_pnl_pct": -17.71,
+    "profit_factor": 0.69,
+    "avg_trade_usd": -0.97,
+    "best_trade_usd": 8.49,
+    "worst_trade_usd": -11.69,
+    "max_drawdown_pct": 18.36,
+    "fees_usd": 40.53,
+    "expectancy_usd": -0.97,
+    "exposure_pct": 66.11,
+    "avg_leverage": 0.29,
+    "balance_end": 822.92,
+    "exit_reasons": {
+      "end_of_test": 1,
+      "partial_1r": 36,
+      "partial_2r": 17,
+      "sar": 74,
+      "stop_loss": 17,
+      "take_profit": 16
+    },
+    "coin": "BTC",
+    "interval": "4h",
+    "days": 365,
+    "source": "binance",
+    "bars": 2328,
+    "ticks": 510720,
+    "from": 1759276800000,
+    "to": 1792785600000,
+    "buy_and_hold_pct": -24.45,
+    "strategy_signals": {
+      "signals": 268,
+      "entries": 108,
+      "exits": 160,
+      "warmup_ok": true,
+      "last_reason": "sar_reverse_from_sar"
+    },
+    "tag": "partial",
+    "overrides": {
+      "partial_exits": [
+        [
+          1.0,
+          0.5
+        ],
+        [
+          2.0,
+          0.3
+        ]
+      ]
+    },
+    "config": {
+      "ema_fast": 3,
+      "ema_slow": 9,
+      "adx_period": 14,
+      "adx_threshold": 23.0,
+      "atr_period": 14,
+      "atr_sl_multiplier": 2.0,
+      "risk_reward_ratio": 3.0,
+      "risk_per_trade": 0.01,
+      "max_leverage": null,
+      "entry_ladder": null,
+      "ladder_step_atr": null,
+      "partial_exits": [
+        [
+          1.0,
+          0.5
+        ],
+        [
+          2.0,
+          0.3
+        ]
+      ],
+      "allow_sar_reverse": null,
+      "cooldown_bars_after_loss": null
+    },
+    "variant": "partial",
+    "runtime_s": 5.6
+  },
+  {
+    "trades": 133,
+    "wins": 66,
+    "losses": 67,
+    "win_rate_pct": 49.62,
+    "net_pnl_usd": -123.92,
+    "net_pnl_pct": -12.39,
+    "profit_factor": 0.75,
+    "avg_trade_usd": -0.81,
+    "best_trade_usd": 18.06,
+    "worst_trade_usd": -12.59,
+    "max_drawdown_pct": 14.99,
+    "fees_usd": 32.25,
+    "expectancy_usd": -0.81,
+    "exposure_pct": 69.6,
+    "avg_leverage": 0.28,
+    "balance_end": 876.08,
+    "exit_reasons": {
+      "end_of_test": 1,
+      "partial_1r": 32,
+      "partial_2r": 16,
+      "sar": 52,
+      "stop_loss": 14,
+      "take_profit": 18
+    },
+    "coin": "BTC",
+    "interval": "4h",
+    "days": 365,
+    "source": "binance",
+    "bars": 2328,
+    "ticks": 510720,
+    "from": 1759276800000,
+    "to": 1792785600000,
+    "buy_and_hold_pct": -24.45,
+    "strategy_signals": {
+      "signals": 371,
+      "entries": 239,
+      "exits": 132,
+      "warmup_ok": true,
+      "last_reason": "partial_1r"
+    },
+    "tag": "both",
+    "overrides": {
+      "entry_ladder": [
+        0.5,
+        0.25,
+        0.25
+      ],
+      "ladder_step_atr": 0.5,
+      "partial_exits": [
+        [
+          1.0,
+          0.5
+        ],
+        [
+          2.0,
+          0.3
+        ]
+      ]
+    },
+    "config": {
+      "ema_fast": 3,
+      "ema_slow": 9,
+      "adx_period": 14,
+      "adx_threshold": 23.0,
+      "atr_period": 14,
+      "atr_sl_multiplier": 2.0,
+      "risk_reward_ratio": 3.0,
+      "risk_per_trade": 0.01,
+      "max_leverage": null,
+      "entry_ladder": [
+        0.5,
+        0.25,
+        0.25
+      ],
+      "ladder_step_atr": 0.5,
+      "partial_exits": [
+        [
+          1.0,
+          0.5
+        ],
+        [
+          2.0,
+          0.3
+        ]
+      ],
+      "allow_sar_reverse": null,
+      "cooldown_bars_after_loss": null
+    },
+    "variant": "both",
+    "runtime_s": 5.7
+  },
+  {
+    "trades": 126,
+    "wins": 68,
+    "losses": 58,
+    "win_rate_pct": 53.97,
+    "net_pnl_usd": -64.84,
+    "net_pnl_pct": -6.48,
+    "profit_factor": 0.81,
+    "avg_trade_usd": -0.42,
+    "best_trade_usd": 16.08,
+    "worst_trade_usd": -11.65,
+    "max_drawdown_pct": 10.54,
+    "fees_usd": 22.71,
+    "expectancy_usd": -0.42,
+    "exposure_pct": 67.22,
+    "avg_leverage": 0.2,
+    "balance_end": 935.16,
+    "exit_reasons": {
+      "end_of_test": 1,
+      "partial_1r": 39,
+      "partial_2r": 18,
+      "sar": 47,
+      "stop_loss": 10,
+      "take_profit": 11
+    },
+    "coin": "BTC",
+    "interval": "4h",
+    "days": 365,
+    "source": "binance",
+    "bars": 2328,
+    "ticks": 510720,
+    "from": 1759276800000,
+    "to": 1792785600000,
+    "buy_and_hold_pct": -24.45,
+    "strategy_signals": {
+      "signals": 282,
+      "entries": 157,
+      "exits": 125,
+      "warmup_ok": true,
+      "last_reason": "ladder_add_2"
+    },
+    "tag": "wide",
+    "overrides": {
+      "entry_ladder": [
+        0.4,
+        0.3,
+        0.3
+      ],
+      "ladder_step_atr": 1.0,
+      "partial_exits": [
+        [
+          1.0,
+          0.5
+        ],
+        [
+          2.0,
+          0.5
+        ]
+      ]
+    },
+    "config": {
+      "ema_fast": 3,
+      "ema_slow": 9,
+      "adx_period": 14,
+      "adx_threshold": 23.0,
+      "atr_period": 14,
+      "atr_sl_multiplier": 2.0,
+      "risk_reward_ratio": 3.0,
+      "risk_per_trade": 0.01,
+      "max_leverage": null,
+      "entry_ladder": [
+        0.4,
+        0.3,
+        0.3
+      ],
+      "ladder_step_atr": 1.0,
+      "partial_exits": [
+        [
+          1.0,
+          0.5
+        ],
+        [
+          2.0,
+          0.5
+        ]
+      ],
+      "allow_sar_reverse": null,
+      "cooldown_bars_after_loss": null
+    },
+    "variant": "wide",
+    "runtime_s": 5.7
+  },
+  {
+    "trades": 133,
+    "wins": 66,
+    "losses": 67,
+    "win_rate_pct": 49.62,
+    "net_pnl_usd": -94.89,
+    "net_pnl_pct": -9.49,
+    "profit_factor": 0.78,
+    "avg_trade_usd": -0.71,
+    "best_trade_usd": 18.15,
+    "worst_trade_usd": -12.84,
+    "max_drawdown_pct": 12.99,
+    "fees_usd": 0.0,
+    "expectancy_usd": -0.71,
+    "exposure_pct": 69.47,
+    "avg_leverage": 0.27,
+    "balance_end": 905.11,
+    "exit_reasons": {
+      "end_of_test": 1,
+      "partial_1r": 32,
+      "partial_2r": 16,
+      "sar": 52,
+      "stop_loss": 14,
+      "take_profit": 18
+    },
+    "coin": "BTC",
+    "interval": "4h",
+    "days": 365,
+    "source": "binance",
+    "bars": 2328,
+    "ticks": 510720,
+    "from": 1759276800000,
+    "to": 1792785600000,
+    "buy_and_hold_pct": -24.45,
+    "strategy_signals": {
+      "signals": 370,
+      "entries": 238,
+      "exits": 132,
+      "warmup_ok": true,
+      "last_reason": "partial_1r"
+    },
+    "tag": "both_nofee",
+    "overrides": {
+      "entry_ladder": [
+        0.5,
+        0.25,
+        0.25
+      ],
+      "ladder_step_atr": 0.5,
+      "partial_exits": [
+        [
+          1.0,
+          0.5
+        ],
+        [
+          2.0,
+          0.3
+        ]
+      ]
+    },
+    "config": {
+      "ema_fast": 3,
+      "ema_slow": 9,
+      "adx_period": 14,
+      "adx_threshold": 23.0,
+      "atr_period": 14,
+      "atr_sl_multiplier": 2.0,
+      "risk_reward_ratio": 3.0,
+      "risk_per_trade": 0.01,
+      "max_leverage": null,
+      "entry_ladder": [
+        0.5,
+        0.25,
+        0.25
+      ],
+      "ladder_step_atr": 0.5,
+      "partial_exits": [
+        [
+          1.0,
+          0.5
+        ],
+        [
+          2.0,
+          0.3
+        ]
+      ],
+      "allow_sar_reverse": null,
+      "cooldown_bars_after_loss": null
+    },
+    "variant": "both_nofee",
+    "runtime_s": 5.7
+  }
+]
