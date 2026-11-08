@@ -104,6 +104,17 @@ ls bots/*.yaml
 # Set active: true to enable, active: false to disable
 ```
 
+**Docker (any VPS/PC):**
+```bash
+docker build -t hl-engine:latest .
+docker run --rm hl-engine:latest --validate bots/sol_ema_adx.yaml
+docker compose --profile sol up -d --build     # sol|eth|btc profiles
+docker compose --profile tools run --rm validate
+```
+Keys enter via `--env-file .env` or a `./keys` mount; nothing secret is baked into
+the image. On a small VPS never build: `docker save | gzip` on the dev machine,
+`docker load` on the server.
+
 ## Development Patterns & Style
 
 ### Code Style
