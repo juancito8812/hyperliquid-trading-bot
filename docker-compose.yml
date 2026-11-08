@@ -1,0 +1,45 @@
+name: hl-engine
+
+x-bot: &bot
+  image: hl-engine:latest
+  build:
+    context: .
+    dockerfile: Dockerfile
+  restart: unless-stopped
+  stop_grace_period: 30s
+  env_file:
+    - path: .env
+      required: false
+  volumes:
+    - ./bots:/app/bots:ro
+    - ./keys:/keys:ro
+  logging:
+    driver: json-file
+    options:
+      max-size: "20m"
+      max-file: "5"
+
+services:
+  sol:
+    <<: *bot
+    container_name: hl-sol-ema-adx
+    command: ["bots/sol_ema_adx.yaml"]
+    profiles: ["sol"]
+
+  eth:
+    <<: *bot
+    container_name: hl-eth-ema-adx
+    command: ["bots/eth_ema_adx.yaml"]
+    profiles: ["eth"]
+
+  btc:
+    <<: *bot
+    container_name: hl-btc-ema-adx
+    command: ["bots/btc_ema_adx.yaml"]
+    profiles: ["btc"]
+
+  validate:
+    <<: *bot
+    profiles: ["tools"]
+    restart: "no"
+    command: ["--validate", "bots/sol_ema_adx.yaml"]

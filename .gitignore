@@ -23,6 +23,8 @@ env/
 *.pem
 private_keys/
 secrets/
+keys/
+hl-engine.tgz
 
 # Trading data and logs
 data/

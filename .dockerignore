@@ -1,0 +1,15 @@
+.git
+.gitignore
+.venv
+venv
+__pycache__
+*.pyc
+.env
+.env.*
+!.env.example
+backtest_results
+tests
+learning_examples
+*.md
+!README.md
+scripts/__pycache__

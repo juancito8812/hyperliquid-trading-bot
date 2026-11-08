@@ -151,13 +151,13 @@ Config lives in the same bot YAML (`bots/sol_ema_adx.yaml`, `eth_ema_adx.yaml`,
 
 ```yaml
 strategy:
-  name: ema_adx        # selects EmaAdxStrategy
+  type: ema_adx        # selects EmaAdxStrategy
   symbol: SOL
   interval: 15m
-  ema_fast: 9
-  ema_slow: 21
-  adx_threshold: 25
-  risk_per_trade_pct: 0.01
+  ema_fast: 3
+  ema_slow: 9
+  adx_threshold: 23
+  risk_per_trade: 0.01
 ```
 
 ```bash
@@ -169,6 +169,47 @@ Tests (offline, no keys needed): `uv run --extra test pytest tests -q`.
 
 Note: a `CLOSE` signal now exits with a **reduce-only market order** in
 `TradingEngine._close_positions` (previously close signals were ignored).
+
+## 🐳 Docker
+
+The image ships Python 3.13, every dependency from `uv.lock`, `src/` and
+`bots/`, runs as non-root (`uid 1000`) and defaults to `bots/sol_ema_adx.yaml`.
+
+```bash
+docker build -t hl-engine:latest .
+
+# validate a config without keys
+docker run --rm hl-engine:latest --validate bots/sol_ema_adx.yaml
+
+# run one bot; keys come from .env (never baked into the image)
+docker run -d --name hl-sol --restart unless-stopped \
+  --env-file .env -v "$PWD/bots:/app/bots:ro" \
+  hl-engine:latest bots/sol_ema_adx.yaml
+```
+
+Or with compose (one profile per pair, any number can run side by side):
+
+```bash
+cp .env.example .env          # set HYPERLIQUID_TESTNET_PRIVATE_KEY / HYPERLIQUID_TESTNET
+docker compose --profile sol --profile eth up -d --build
+docker compose logs -f sol
+docker compose --profile tools run --rm validate   # config check only
+```
+
+Credential options inside the container: `HYPERLIQUID_TESTNET_PRIVATE_KEY`,
+`HYPERLIQUID_MAINNET_PRIVATE_KEY`, the `*_KEY_FILE` variants (mount keys under
+`./keys:/keys:ro`), or a per-bot key in the YAML (not recommended).
+
+Deploy on a small VPS without building there (2 GB boxes choke on the build):
+
+```bash
+docker save hl-engine:latest | gzip -1 > hl-engine.tgz   # on the build machine
+scp hl-engine.tgz user@vps:/tmp/ && ssh user@vps \
+  'gunzip -c /tmp/hl-engine.tgz | docker load && cd ~/hl-engine && docker compose --profile sol up -d'
+```
+
+`restart: unless-stopped` plus the container `HEALTHCHECK` (checks the runner
+process is alive) keeps the bot up across reboots and crashes.
 
 ## 🔧 Development
 
