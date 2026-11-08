@@ -1,0 +1,140 @@
+[
+  {
+    "trades": 1467,
+    "wins": 272,
+    "losses": 1195,
+    "win_rate_pct": 18.54,
+    "net_pnl_usd": -765.09,
+    "net_pnl_pct": -76.51,
+    "profit_factor": 0.95,
+    "avg_trade_usd": -0.2,
+    "best_trade_usd": 66.03,
+    "worst_trade_usd": -26.89,
+    "max_drawdown_pct": 84.87,
+    "fees_usd": 948.62,
+    "exit_reasons": {
+      "sar": 889,
+      "stop_loss": 306,
+      "take_profit": 272
+    },
+    "coin": "SOL",
+    "interval": "15m",
+    "days": 365,
+    "source": "binance",
+    "bars": 37248,
+    "ticks": 555720,
+    "from": 1759276800000,
+    "to": 1792799100000,
+    "buy_and_hold_pct": -55.48,
+    "strategy_signals": {
+      "signals": 2934,
+      "entries": 1467,
+      "exits": 1467,
+      "warmup_ok": true,
+      "last_reason": "stop_loss"
+    },
+    "config": {
+      "ema_fast": 3,
+      "ema_slow": 9,
+      "adx_period": 14,
+      "adx_threshold": 23.0,
+      "atr_period": 14,
+      "atr_sl_multiplier": 2.0,
+      "risk_reward_ratio": 3.0,
+      "risk_per_trade": 0.01,
+      "max_leverage": null
+    }
+  },
+  {
+    "trades": 1506,
+    "wins": 277,
+    "losses": 1229,
+    "win_rate_pct": 18.39,
+    "net_pnl_usd": -884.54,
+    "net_pnl_pct": -88.45,
+    "profit_factor": 0.74,
+    "avg_trade_usd": -0.44,
+    "best_trade_usd": 24.8,
+    "worst_trade_usd": -14.23,
+    "max_drawdown_pct": 89.3,
+    "fees_usd": 444.55,
+    "exit_reasons": {
+      "sar": 929,
+      "stop_loss": 300,
+      "take_profit": 277
+    },
+    "coin": "ETH",
+    "interval": "15m",
+    "days": 365,
+    "source": "binance",
+    "bars": 37248,
+    "ticks": 555720,
+    "from": 1759276800000,
+    "to": 1792799100000,
+    "buy_and_hold_pct": -46.61,
+    "strategy_signals": {
+      "signals": 3012,
+      "entries": 1506,
+      "exits": 1506,
+      "warmup_ok": true,
+      "last_reason": "take_profit"
+    },
+    "config": {
+      "ema_fast": 3,
+      "ema_slow": 9,
+      "adx_period": 14,
+      "adx_threshold": 23.0,
+      "atr_period": 14,
+      "atr_sl_multiplier": 2.0,
+      "risk_reward_ratio": 3.0,
+      "risk_per_trade": 0.01,
+      "max_leverage": null
+    }
+  },
+  {
+    "trades": 1545,
+    "wins": 269,
+    "losses": 1276,
+    "win_rate_pct": 17.41,
+    "net_pnl_usd": -848.32,
+    "net_pnl_pct": -84.83,
+    "profit_factor": 0.76,
+    "avg_trade_usd": -0.37,
+    "best_trade_usd": 29.82,
+    "worst_trade_usd": -9.38,
+    "max_drawdown_pct": 85.14,
+    "fees_usd": 567.76,
+    "exit_reasons": {
+      "sar": 960,
+      "stop_loss": 316,
+      "take_profit": 269
+    },
+    "coin": "BTC",
+    "interval": "15m",
+    "days": 365,
+    "source": "binance",
+    "bars": 37248,
+    "ticks": 555720,
+    "from": 1759276800000,
+    "to": 1792799100000,
+    "buy_and_hold_pct": -32.27,
+    "strategy_signals": {
+      "signals": 3090,
+      "entries": 1545,
+      "exits": 1545,
+      "warmup_ok": true,
+      "last_reason": "take_profit"
+    },
+    "config": {
+      "ema_fast": 3,
+      "ema_slow": 9,
+      "adx_period": 14,
+      "adx_threshold": 23.0,
+      "atr_period": 14,
+      "atr_sl_multiplier": 2.0,
+      "risk_reward_ratio": 3.0,
+      "risk_per_trade": 0.01,
+      "max_leverage": null
+    }
+  }
+]

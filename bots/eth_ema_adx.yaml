@@ -1,0 +1,54 @@
+# EMA cross + ADX filter — ETH 15m. Swap `symbol`/`name` for other assets.
+# See bots/sol_ema_adx.yaml for the annotated version.
+
+name: "eth_ema_adx"
+active: true
+
+exchange:
+  type: "hyperliquid"
+  testnet: true
+
+strategy:
+  type: "ema_adx"
+  symbol: "ETH"
+  interval: "15m"
+
+  ema_fast: 3
+  ema_slow: 9
+  atr_period: 14
+  adx_period: 14
+  adx_threshold: 23.0
+
+  atr_sl_multiplier: 2.0
+  risk_reward_ratio: 3.0
+  sar_atr_multiplier: 1.2
+
+  risk_per_trade: 0.01
+  max_position_pct: 0.9
+  min_notional: 10.0
+  warmup_candles: 200
+
+account:
+  max_allocation_pct: 10.0
+
+grid:
+  symbol: "ETH"
+  levels: 5
+  price_range:
+    mode: "auto"
+    auto:
+      range_pct: 5.0
+
+risk_management:
+  stop_loss_enabled: false
+  stop_loss_pct: 8.0
+  take_profit_enabled: false
+  take_profit_pct: 25.0
+  tpsl_mode: "polling"
+  max_drawdown_pct: 30.0
+  max_position_size_pct: 100.0
+  rebalance:
+    price_move_threshold_pct: 12.0
+
+monitoring:
+  log_level: "INFO"

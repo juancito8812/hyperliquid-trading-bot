@@ -101,19 +101,29 @@ class GridTradingBot:
             self.config.account.max_allocation_pct / 100.0
         )
 
-        return {
-            "exchange": {
-                "type": self.config.exchange.type,
-                "testnet": self.config.exchange.testnet,
-            },
-            "strategy": {
+        strategy_section = dict(getattr(self.config, "strategy", None) or {})
+        if strategy_section:
+            # Explicit strategy block in the bot YAML (e.g. type: ema_adx)
+            strategy_config = strategy_section
+            strategy_config.setdefault("type", "ema_adx")
+            strategy_config.setdefault("symbol", self.config.grid.symbol)
+            strategy_config.setdefault("testnet", self.config.exchange.testnet)
+        else:
+            strategy_config = {
                 "type": "basic_grid",  # Default to basic grid
                 "symbol": self.config.grid.symbol,
                 "levels": self.config.grid.levels,
                 "range_pct": self.config.grid.price_range.auto.range_pct,
                 "total_allocation": total_allocation_usd,
                 "rebalance_threshold_pct": self.config.risk_management.rebalance.price_move_threshold_pct,
+            }
+
+        return {
+            "exchange": {
+                "type": self.config.exchange.type,
+                "testnet": self.config.exchange.testnet,
             },
+            "strategy": strategy_config,
             "bot_config": {
                 # Pass through the entire config so KeyManager can look for bot-specific keys
                 "name": self.config.name,

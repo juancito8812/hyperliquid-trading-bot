@@ -13,6 +13,7 @@ dependencies = [
     "httpx~=0.28.1",
     "python-dotenv~=1.2",
     "websockets~=16.0",
+    "numpy>=2.0",
 ]
 
 [project.optional-dependencies]
@@ -26,3 +27,7 @@ dev = [
     "isort",
     "mypy",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

@@ -1,0 +1,101 @@
+[
+  {
+    "trades": 70,
+    "wins": 14,
+    "losses": 56,
+    "win_rate_pct": 20.0,
+    "net_pnl_usd": -151.24,
+    "net_pnl_pct": -15.12,
+    "profit_factor": 0.71,
+    "avg_trade_usd": -1.81,
+    "best_trade_usd": 40.06,
+    "worst_trade_usd": -29.66,
+    "max_drawdown_pct": 22.93,
+    "fees_usd": 49.37,
+    "exit_reasons": {
+      "sar": 20,
+      "stop_loss": 36,
+      "take_profit": 14
+    },
+    "coin": "SOL",
+    "interval": "1h",
+    "days": 365,
+    "candles": 5000,
+    "first_candle": 1774861200000,
+    "last_candle": 1792857600000,
+    "buy_and_hold_pct": 27.39,
+    "strategy_signals": {
+      "signals": 140,
+      "entries": 70,
+      "exits": 70,
+      "warmup_ok": true,
+      "last_reason": "stop_loss"
+    }
+  },
+  {
+    "trades": 64,
+    "wins": 20,
+    "losses": 44,
+    "win_rate_pct": 31.25,
+    "net_pnl_usd": 46.38,
+    "net_pnl_pct": 4.64,
+    "profit_factor": 1.2,
+    "avg_trade_usd": 1.12,
+    "best_trade_usd": 43.34,
+    "worst_trade_usd": -37.43,
+    "max_drawdown_pct": 16.32,
+    "fees_usd": 50.91,
+    "exit_reasons": {
+      "sar": 13,
+      "stop_loss": 31,
+      "take_profit": 20
+    },
+    "coin": "ETH",
+    "interval": "1h",
+    "days": 365,
+    "candles": 5000,
+    "first_candle": 1774861200000,
+    "last_candle": 1792857600000,
+    "buy_and_hold_pct": 11.25,
+    "strategy_signals": {
+      "signals": 128,
+      "entries": 64,
+      "exits": 64,
+      "warmup_ok": true,
+      "last_reason": "stop_loss"
+    }
+  },
+  {
+    "trades": 75,
+    "wins": 22,
+    "losses": 53,
+    "win_rate_pct": 29.33,
+    "net_pnl_usd": -94.79,
+    "net_pnl_pct": -9.48,
+    "profit_factor": 0.8,
+    "avg_trade_usd": -0.89,
+    "best_trade_usd": 21.97,
+    "worst_trade_usd": -34.83,
+    "max_drawdown_pct": 15.93,
+    "fees_usd": 55.81,
+    "exit_reasons": {
+      "sar": 21,
+      "stop_loss": 32,
+      "take_profit": 22
+    },
+    "coin": "BTC",
+    "interval": "1h",
+    "days": 365,
+    "candles": 5000,
+    "first_candle": 1774861200000,
+    "last_candle": 1792857600000,
+    "buy_and_hold_pct": 17.55,
+    "strategy_signals": {
+      "signals": 150,
+      "entries": 75,
+      "exits": 75,
+      "warmup_ok": true,
+      "last_reason": "sar"
+    }
+  }
+]

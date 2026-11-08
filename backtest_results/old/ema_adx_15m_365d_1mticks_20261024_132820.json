@@ -1,0 +1,72 @@
+[
+  {
+    "trades": 12,
+    "wins": 3,
+    "losses": 9,
+    "win_rate_pct": 25.0,
+    "net_pnl_usd": 3.53,
+    "net_pnl_pct": 0.35,
+    "profit_factor": 1.26,
+    "avg_trade_usd": 0.7,
+    "best_trade_usd": 14.31,
+    "worst_trade_usd": -4.37,
+    "max_drawdown_pct": 2.54,
+    "fees_usd": 9.84,
+    "exit_reasons": {
+      "sar": 7,
+      "stop_loss": 2,
+      "take_profit": 3
+    },
+    "coin": "ETH",
+    "interval": "15m",
+    "tick_interval": "1m",
+    "days": 365,
+    "bars": 5004,
+    "ticks": 5071,
+    "first_bar": 1788358500000,
+    "last_bar": 1792861200000,
+    "buy_and_hold_pct": -5.42,
+    "strategy_signals": {
+      "signals": 24,
+      "entries": 12,
+      "exits": 12,
+      "warmup_ok": true,
+      "last_reason": "stop_loss"
+    }
+  },
+  {
+    "trades": 13,
+    "wins": 4,
+    "losses": 9,
+    "win_rate_pct": 30.77,
+    "net_pnl_usd": 15.74,
+    "net_pnl_pct": 1.57,
+    "profit_factor": 2.15,
+    "avg_trade_usd": 1.62,
+    "best_trade_usd": 12.45,
+    "worst_trade_usd": -2.86,
+    "max_drawdown_pct": 1.53,
+    "fees_usd": 10.52,
+    "exit_reasons": {
+      "end_of_test": 1,
+      "sar": 8,
+      "take_profit": 4
+    },
+    "coin": "BTC",
+    "interval": "15m",
+    "tick_interval": "1m",
+    "days": 365,
+    "bars": 5004,
+    "ticks": 5075,
+    "first_bar": 1788358500000,
+    "last_bar": 1792861200000,
+    "buy_and_hold_pct": 0.89,
+    "strategy_signals": {
+      "signals": 25,
+      "entries": 13,
+      "exits": 12,
+      "warmup_ok": true,
+      "last_reason": "ema_cross_up"
+    }
+  }
+]

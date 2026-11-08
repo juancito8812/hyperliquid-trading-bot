@@ -298,6 +298,14 @@ class EnhancedBotConfig:
     market_data: MarketDataConfig = field(default_factory=MarketDataConfig)
     monitoring: MonitoringConfig = field(default_factory=MonitoringConfig)
 
+    # Strategy selection. Empty/absent = legacy basic_grid built from `grid`.
+    # Present = passed verbatim to the strategy registry, e.g.
+    #   strategy:
+    #     type: ema_adx
+    #     symbol: SOL
+    #     interval: 15m
+    strategy: Dict[str, Any] = field(default_factory=dict)
+
     # Optional bot-specific private key configuration (overrides environment keys)
     private_key: Optional[str] = None  # Single key for both environments
     testnet_private_key: Optional[str] = None  # Testnet-specific key
@@ -318,8 +326,8 @@ class EnhancedBotConfig:
         self.risk_management.validate()
         self.market_data.validate()
         self.monitoring.validate()
+        self._validate_strategy()
 
-        # Cross-validation checks
         if isinstance(self.account.risk_level, str):
             self.account.risk_level = RiskLevel(self.account.risk_level)
 
@@ -334,6 +342,27 @@ class EnhancedBotConfig:
 
         # Validate private key configuration (security checks)
         self._validate_private_keys()
+
+    def _validate_strategy(self) -> None:
+        """Validate the optional `strategy:` block.
+
+        Non-grid strategies (e.g. ``ema_adx``) ignore the ``grid`` section, so
+        only their own required keys are checked here.
+        """
+        block = self.strategy
+        if not block:
+            return
+        if not isinstance(block, dict):
+            raise ValueError("strategy must be a mapping (e.g. {'type': 'ema_adx'})")
+
+        strategy_type = block.get("type")
+        if not strategy_type or not isinstance(strategy_type, str):
+            raise ValueError("strategy.type is required when a strategy block is set")
+
+        if strategy_type in ("ema_adx", "ema-adx"):
+            from strategies.ema_adx import EmaAdxConfig
+
+            EmaAdxConfig.from_dict(block)
 
     def _validate_private_keys(self) -> None:
         """Validate private key configuration and issue security warnings"""

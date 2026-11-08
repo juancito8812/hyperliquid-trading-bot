@@ -129,6 +129,47 @@ The bot includes automated risk management and position exit features:
 
 All exit strategies are configurable per bot and disabled by default for safety.
 
+## 📈 EMA/ADX trend strategy
+
+Besides the grid strategy, `src/strategies/ema_adx/` ships a trend-following
+strategy ported from the standalone `hyperliquid-tradingbot` project.
+
+How it works:
+
+- Resamples live trades into candles for the configured `interval` (default `15m`).
+- Seeds ~500 historical candles from Hyperliquid `/info` on start, so it can trade
+  without waiting for warmup.
+- Entry: EMA fast/slow crossover **confirmed on a closed candle** with
+  `ADX >= adx_threshold` (default 25).
+- Exit (checked on every tick against the real position): ATR stop loss,
+  ATR take profit, or a SAR-style reversal trail that also flips the side.
+- Sizing: risk `risk_per_trade_pct` of balance over `atr * atr_sl_multiplier`,
+  capped by `max_position_pct` of available balance.
+
+Config lives in the same bot YAML (`bots/sol_ema_adx.yaml`, `eth_ema_adx.yaml`,
+`btc_ema_adx.yaml`):
+
+```yaml
+strategy:
+  name: ema_adx        # selects EmaAdxStrategy
+  symbol: SOL
+  interval: 15m
+  ema_fast: 9
+  ema_slow: 21
+  adx_threshold: 25
+  risk_per_trade_pct: 0.01
+```
+
+```bash
+uv run src/run_bot.py bots/sol_ema_adx.yaml --validate   # check config
+uv run src/run_bot.py bots/sol_ema_adx.yaml              # testnet run
+```
+
+Tests (offline, no keys needed): `uv run --extra test pytest tests -q`.
+
+Note: a `CLOSE` signal now exits with a **reduce-only market order** in
+`TradingEngine._close_positions` (previously close signals were ignored).
+
 ## 🔧 Development
 
 ### **Package management**

@@ -1,0 +1,38 @@
+[
+  {
+    "trades": 16,
+    "wins": 2,
+    "losses": 14,
+    "win_rate_pct": 12.5,
+    "net_pnl_usd": -32.65,
+    "net_pnl_pct": -3.27,
+    "profit_factor": 0.55,
+    "avg_trade_usd": -1.64,
+    "best_trade_usd": 20.05,
+    "worst_trade_usd": -7.07,
+    "max_drawdown_pct": 6.12,
+    "fees_usd": 12.76,
+    "exit_reasons": {
+      "end_of_test": 1,
+      "sar": 10,
+      "stop_loss": 3,
+      "take_profit": 2
+    },
+    "coin": "SOL",
+    "interval": "15m",
+    "tick_interval": "1m",
+    "days": 365,
+    "bars": 5003,
+    "ticks": 5061,
+    "first_bar": 1788359400000,
+    "last_bar": 1792861200000,
+    "buy_and_hold_pct": -1.25,
+    "strategy_signals": {
+      "signals": 31,
+      "entries": 16,
+      "exits": 15,
+      "warmup_ok": true,
+      "last_reason": "ema_cross_up"
+    }
+  }
+]
