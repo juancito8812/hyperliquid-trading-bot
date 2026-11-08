@@ -1,7 +1,7 @@
 name: hl-engine
 
 x-bot: &bot
-  image: hl-engine:latest
+  image: ghcr.io/juancito8812/hyperliquid-trading-bot:latest
   build:
     context: .
     dockerfile: Dockerfile

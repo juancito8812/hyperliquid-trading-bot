@@ -172,19 +172,23 @@ Note: a `CLOSE` signal now exits with a **reduce-only market order** in
 
 ## 🐳 Docker
 
-The image ships Python 3.13, every dependency from `uv.lock`, `src/` and
-`bots/`, runs as non-root (`uid 1000`) and defaults to `bots/sol_ema_adx.yaml`.
+Published image (built by CI on every push to `main`):
+`ghcr.io/juancito8812/hyperliquid-trading-bot:latest` — public, no login needed.
+It ships Python 3.13, every dependency from `uv.lock`, `src/` and `bots/`,
+runs as non-root (`uid 1000`) and defaults to `bots/sol_ema_adx.yaml`.
 
 ```bash
-docker build -t hl-engine:latest .
-
 # validate a config without keys
-docker run --rm hl-engine:latest --validate bots/sol_ema_adx.yaml
+docker run --rm ghcr.io/juancito8812/hyperliquid-trading-bot:latest \
+  --validate bots/sol_ema_adx.yaml
 
 # run one bot; keys come from .env (never baked into the image)
 docker run -d --name hl-sol --restart unless-stopped \
   --env-file .env -v "$PWD/bots:/app/bots:ro" \
-  hl-engine:latest bots/sol_ema_adx.yaml
+  ghcr.io/juancito8812/hyperliquid-trading-bot:latest bots/sol_ema_adx.yaml
+
+# rebuild locally after changing src/
+docker build -t ghcr.io/juancito8812/hyperliquid-trading-bot:latest .
 ```
 
 Or with compose (one profile per pair, any number can run side by side):
@@ -200,10 +204,18 @@ Credential options inside the container: `HYPERLIQUID_TESTNET_PRIVATE_KEY`,
 `HYPERLIQUID_MAINNET_PRIVATE_KEY`, the `*_KEY_FILE` variants (mount keys under
 `./keys:/keys:ro`), or a per-bot key in the YAML (not recommended).
 
-Deploy on a small VPS without building there (2 GB boxes choke on the build):
+Deploy on any VPS/PC — no build needed, just pull the published image:
 
 ```bash
-docker save hl-engine:latest | gzip -1 > hl-engine.tgz   # on the build machine
+git clone https://github.com/juancito8812/hyperliquid-trading-bot hl-engine
+cd hl-engine && cp .env.example .env   # paste your key, set HYPERLIQUID_TESTNET
+docker compose --profile sol up -d
+```
+
+Registry unreachable (air-gapped box / 2 GB VPS with no outbound)? Ship it as a tar:
+
+```bash
+docker save ghcr.io/juancito8812/hyperliquid-trading-bot:latest | gzip -1 > hl-engine.tgz
 scp hl-engine.tgz user@vps:/tmp/ && ssh user@vps \
   'gunzip -c /tmp/hl-engine.tgz | docker load && cd ~/hl-engine && docker compose --profile sol up -d'
 ```
